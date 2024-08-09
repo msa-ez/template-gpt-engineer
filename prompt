@@ -30,42 +30,24 @@ mvn [command] --no-transfer-progress
 
 <function>
 
-var cache = [];
-const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples"];
+var cache = []
+  const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples"]
+  const cycleAvoid = (key, value) => {
+                  if (isNaN(key) && !includingKeys.includes(key)) return;
 
-const cycleAvoid = (key, value) => {
-  if (!includingKeys.includes(key) && !isNaN(key)) return;
-
-  // shorten the type name
-  if (key == "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
-    value = value.split(".").pop();
-  }
-
-  if (typeof value === 'object' && value !== null) {
-    // Duplicate reference found, discard key
-    if (cache.includes(value)) return;
-
-    // Store value in our collection
-    cache.push(value);
-
-    // For objects, recursively process its properties
-    if (Array.isArray(value)) {
-      return value.map(item => cycleAvoid("", item));
-    } else {
-      let obj = {};
-      for (let prop in value) {
-        if (value.hasOwnProperty(prop)) {
-          obj[prop] = cycleAvoid(prop, value[prop]);
-        }
-      }
-      return obj;
-    }
-  }
-
-  return value;
-};
-
-this.contexts.json = JSON.stringify(this, cycleAvoid);
+                  //// shorten the type name
+                  if(key == "_type" && value && value.indexOf('.') > 1) value = value.split(".").pop()
+    
+                  if (typeof value === 'object' && value !== null) {
+                    // Duplicate reference found, discard key
+                    if (cache.includes(value)) return;
+                
+                    // Store value in our collection
+                    cache.push(value);
+                  }
+                  return value;
+                }
+this.contexts.json = JSON.stringify(this, cycleAvoid)
 
 
 </function>
