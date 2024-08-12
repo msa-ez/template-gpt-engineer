@@ -32,60 +32,44 @@ mvn [command] --no-transfer-progress
 
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
-const cycleAvoid = (key, value, path = '') => {
-    // examples 내부의 모든 데이터를 유지
-    if (path.includes('examples')) {
-        if (typeof value === 'object' && value !== null) {
-            if (cache.includes(value)) return '[Circular]';
-            cache.push(value);
-            
-            if (Array.isArray(value)) {
-                return value.map((item, index) => cycleAvoid(index, item, `${path}.${key}`));
-            } else {
-                const newObj = {};
-                for (let i in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, i)) {
-                        newObj[i] = cycleAvoid(i, value[i], `${path}.${key}`);
-                    }
-                }
-                return newObj;
-            }
-        }
-        return value;
-    }
-
-    // includingKeys에 포함되지 않은 키는 제외
+const cycleAvoid = (key, value) => {
     if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
+    // shorten the type name
     if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
         value = value.split(".").pop();
     }
 
     if (typeof value === 'object' && value !== null) {
+        // Duplicate reference found, discard key
         if (cache.includes(value)) return undefined;
+
+        // Store value in our collection
         cache.push(value);
 
         if (Array.isArray(value)) {
-            return value.map((item, index) => cycleAvoid(index, item, `${path}.${key}`)).filter(item => item !== undefined);
+            return value.map(item => cycleAvoid('', item));
         } else {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    const subValue = cycleAvoid(i, value[i], `${path}.${key}`);
-                    if (subValue !== undefined) {
-                        newObj[i] = subValue;
+                    // Preserve the entire value object for policy examples
+                    if (key === 'value' && ['given', 'when', 'then'].includes(i)) {
+                        newObj[i] = value[i];
+                    } else {
+                        const subValue = cycleAvoid(i, value[i]);
+                        if (subValue !== undefined) {
+                            newObj[i] = subValue;
+                        }
                     }
                 }
             }
-            return Object.keys(newObj).length > 0 ? newObj : undefined;
+            return newObj;
         }
     }
     return value;
 };
 
-// 입력 객체의 복사본을 만들어 처리
-const inputCopy = JSON.parse(JSON.stringify(this));
-this.contexts.json = JSON.stringify(inputCopy, (key, value) => cycleAvoid(key, value, ''));
-
+this.contexts.json = JSON.stringify(this, cycleAvoid);
 
 </function>
