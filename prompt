@@ -31,22 +31,39 @@ mvn [command] --no-transfer-progress
 <function>
 
 var cache = []
-  const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples"]
-  const cycleAvoid = (key, value) => {
-                  if (isNaN(key) && !includingKeys.includes(key)) return;
+const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples"]
+const cycleAvoid = (key, value) => {
+        if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
-                  //// shorten the type name
-                  if(key == "_type" && value && value.indexOf('.') > 1) value = value.split(".").pop()
-    
-                  if (typeof value === 'object' && value !== null) {
-                    // Duplicate reference found, discard key
-                    if (cache.includes(value)) return;
-                
-                    // Store value in our collection
-                    cache.push(value);
-                  }
-                  return value;
+        // shorten the type name
+        if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
+            value = value.split(".").pop();
+        }
+
+        if (typeof value === 'object' && value !== null) {
+            // Duplicate reference found, discard key
+            if (cache.includes(value)) return undefined;
+
+            // Store value in our collection
+            cache.push(value);
+
+            if (Array.isArray(value)) {
+                return value.map(item => cycleAvoid('', item));
+            } else {
+                const newObj = {};
+                for (let i in value) {
+                    if (Object.prototype.hasOwnProperty.call(value, i)) {
+                        const subValue = cycleAvoid(i, value[i]);
+                        if (subValue !== undefined) {
+                            newObj[i] = subValue;
+                        }
+                    }
                 }
+                return newObj;
+            }
+        }
+        return value;
+    };
 this.contexts.json = JSON.stringify(this, cycleAvoid)
 
 
