@@ -41,29 +41,15 @@ const cycleAvoid = (key, value) => {
     }
 
     if (typeof value === 'object' && value !== null) {
-        // Duplicate reference found, discard key
-        if (cache.includes(value)) return undefined;
-
-        // Store value in our collection
-        cache.push(value);
-
         if (Array.isArray(value)) {
             return value.map(item => cycleAvoid('', item));
         } else {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    // 'value' 속성을 그대로 유지
-                    if (i === 'value' && value[i] && typeof value[i] === 'object') {
+                    if (i === 'value' && ['given', 'when', 'then'].includes(key)) {
+                        // 'value' 속성을 그대로 유지
                         newObj[i] = value[i];
-                    } else if (['given', 'when', 'then'].includes(i) && Array.isArray(value[i])) {
-                        newObj[i] = value[i].map(item => {
-                            const newItem = {...item};
-                            if (newItem.value && typeof newItem.value === 'object') {
-                                newItem.value = {...newItem.value};
-                            }
-                            return newItem;
-                        });
                     } else {
                         const subValue = cycleAvoid(i, value[i]);
                         if (subValue !== undefined) {
