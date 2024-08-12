@@ -2,6 +2,7 @@ Please implement for this Event Storming Model:
 
 {{{contexts.json}}}
 
+It is necessary to create a DDD-based test file by referring to the given, when, then in the policies example.
 
 I want to utilize following techniques:
 
