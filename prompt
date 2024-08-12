@@ -42,15 +42,16 @@ const cycleAvoid = (key, value) => {
 
     if (typeof value === 'object' && value !== null) {
         if (Array.isArray(value)) {
-            return value.map(item => cycleAvoid('', item));
+            return value.map(item => cycleAvoid(key, item));
         } else {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    if (i === 'value' && ['given', 'when', 'then'].includes(key)) {
-                        // Log the value object
-                        console.log(`Value object for ${key}:`, value[i]);
+                    if (i === 'value' && (key === 'given' || key === 'when' || key === 'then')) {
+                        // 'value' 속성을 그대로 유지
                         newObj[i] = value[i];
+                    } else if (['given', 'when', 'then'].includes(i)) {
+                        newObj[i] = value[i].map(item => cycleAvoid(i, item));
                     } else {
                         const subValue = cycleAvoid(i, value[i]);
                         if (subValue !== undefined) {
