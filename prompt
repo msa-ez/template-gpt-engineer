@@ -32,7 +32,7 @@ mvn [command] --no-transfer-progress
 
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
-const cycleAvoid = (key, value) => {
+onst cycleAvoid = (key, value) => {
     if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
     // shorten the type name
@@ -47,19 +47,10 @@ const cycleAvoid = (key, value) => {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    if (i === 'examples' && Array.isArray(value[i])) {
-                        newObj[i] = value[i].map(example => {
-                            const newExample = {};
-                            for (let j of ['given', 'when', 'then']) {
-                                if (example[j]) {
-                                    newExample[j] = example[j].map(item => ({
-                                        ...item,
-                                        value: item.value ? {...item.value} : {}
-                                    }));
-                                }
-                            }
-                            return newExample;
-                        });
+                    if (i === 'value' && ['given', 'when', 'then'].includes(key)) {
+                        // Log the value object
+                        console.log(`Value object for ${key}:`, value[i]);
+                        newObj[i] = value[i];
                     } else {
                         const subValue = cycleAvoid(i, value[i]);
                         if (subValue !== undefined) {
