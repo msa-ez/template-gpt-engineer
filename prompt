@@ -33,7 +33,8 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 const cycleAvoid = (key, value, path = '') => {
-    if (path.includes('examples')) {
+    // examples 내부 또는 includingKeys에 포함된 키인 경우 처리
+    if (path.includes('examples') || includingKeys.includes(key)) {
         if (typeof value === 'object' && value !== null) {
             if (cache.includes(value)) return undefined;
             cache.push(value);
@@ -53,31 +54,13 @@ const cycleAvoid = (key, value, path = '') => {
         return value;
     }
 
+    // includingKeys에 포함되지 않은 키는 제외
     if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
     if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
         value = value.split(".").pop();
     }
 
-    if (typeof value === 'object' && value !== null) {
-        if (cache.includes(value)) return undefined;
-        cache.push(value);
-
-        if (Array.isArray(value)) {
-            return value.map((item, index) => cycleAvoid(index, item, `${path}.${key}`)).filter(item => item !== undefined);
-        } else {
-            const newObj = {};
-            for (let i in value) {
-                if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    const subValue = cycleAvoid(i, value[i], `${path}.${key}`);
-                    if (subValue !== undefined) {
-                        newObj[i] = subValue;
-                    }
-                }
-            }
-            return Object.keys(newObj).length > 0 ? newObj : undefined;
-        }
-    }
     return value;
 };
 this.contexts.json = JSON.stringify(this, (key, value) => cycleAvoid(key, value));
