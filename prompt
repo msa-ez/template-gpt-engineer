@@ -33,32 +33,6 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 
-function deepCopy(obj, hash = new WeakMap()) {
-    if (Object(obj) !== obj) return obj; // primitives
-    if (hash.has(obj)) return hash.get(obj); // cyclic reference
-    let result;
-    if (obj instanceof Set) {
-        result = new Set();
-        hash.set(obj, result);
-        obj.forEach(value => { result.add(deepCopy(value, hash)); });
-    } else if (obj instanceof Map) {
-        result = new Map();
-        hash.set(obj, result);
-        obj.forEach((value, key) => { result.set(deepCopy(key, hash), deepCopy(value, hash)); });
-    } else if (Array.isArray(obj)) {
-        result = [];
-        hash.set(obj, result);
-        obj.forEach((value, index) => { result[index] = deepCopy(value, hash); });
-    } else if (obj instanceof Object) {
-        result = {};
-        hash.set(obj, result);
-        Object.keys(obj).forEach(key => { result[key] = deepCopy(obj[key], hash); });
-    } else {
-        throw new Error("Unable to copy obj! Its type isn't supported.");
-    }
-    return result;
-}
-
 const cycleAvoid = (key, value) => {
     if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
@@ -75,8 +49,8 @@ const cycleAvoid = (key, value) => {
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
                     if (i === 'value' && (key === 'given' || key === 'when' || key === 'then')) {
-                        // 'value' 속성을 그대로 유지
-                        newObj[i] = deepCopy(value[i]);
+                        console.log(`Processing ${key}.value:`, value[i]);
+                        newObj[i] = value[i];
                     } else if (['given', 'when', 'then'].includes(i)) {
                         newObj[i] = value[i].map(item => cycleAvoid(i, item));
                     } else {
@@ -93,10 +67,13 @@ const cycleAvoid = (key, value) => {
     return value;
 };
 
-// 원본 데이터의 깊은 복사본 생성
-const deepCopiedData = deepCopy(this);
+// 원본 데이터 로깅
+console.log("Original data:", JSON.stringify(this.policies, null, 2));
 
-// 복사본에 대해 cycleAvoid 함수 적용
-this.contexts.json = JSON.stringify(deepCopiedData, cycleAvoid);
+// cycleAvoid 함수 적용
+this.contexts.json = JSON.stringify(this, cycleAvoid);
+
+// 결과 확인을 위한 로그
+console.log("Final result:", JSON.parse(this.contexts.json));
 
 </function>
