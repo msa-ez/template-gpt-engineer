@@ -33,7 +33,27 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 const cycleAvoid = (key, value, path = '') => {
-    if (isNaN(key) && !includingKeys.includes(key) && !path.includes('examples')) return undefined;
+    if (path.includes('examples')) {
+        if (typeof value === 'object' && value !== null) {
+            if (cache.includes(value)) return undefined;
+            cache.push(value);
+            
+            if (Array.isArray(value)) {
+                return value.map((item, index) => cycleAvoid(index, item, `${path}.${key}`));
+            } else {
+                const newObj = {};
+                for (let i in value) {
+                    if (Object.prototype.hasOwnProperty.call(value, i)) {
+                        newObj[i] = cycleAvoid(i, value[i], `${path}.${key}`);
+                    }
+                }
+                return newObj;
+            }
+        }
+        return value;
+    }
+
+    if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
     if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
         value = value.split(".").pop();
@@ -49,9 +69,8 @@ const cycleAvoid = (key, value, path = '') => {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    const newPath = `${path}.${key}`;
-                    const subValue = cycleAvoid(i, value[i], newPath);
-                    if (subValue !== undefined || path.includes('examples')) {
+                    const subValue = cycleAvoid(i, value[i], `${path}.${key}`);
+                    if (subValue !== undefined) {
                         newObj[i] = subValue;
                     }
                 }
