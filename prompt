@@ -35,20 +35,16 @@ const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayNam
 const cycleAvoid = (key, value) => {
         if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
-        // shorten the type name
         if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
             value = value.split(".").pop();
         }
 
         if (typeof value === 'object' && value !== null) {
-            // Duplicate reference found, discard key
             if (cache.includes(value)) return undefined;
-
-            // Store value in our collection
             cache.push(value);
 
             if (Array.isArray(value)) {
-                return value.map(item => cycleAvoid('', item));
+                return value.map(item => cycleAvoid('', item)).filter(item => item !== undefined);
             } else {
                 const newObj = {};
                 for (let i in value) {
@@ -59,7 +55,7 @@ const cycleAvoid = (key, value) => {
                         }
                     }
                 }
-                return newObj;
+                return Object.keys(newObj).length > 0 ? newObj : undefined;
             }
         }
         return value;
