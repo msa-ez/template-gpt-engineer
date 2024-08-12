@@ -47,9 +47,17 @@ const cycleAvoid = (key, value) => {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    if (i === 'value' && ['given', 'when', 'then'].includes(key)) {
+                    if (i === 'value' && ['given', 'when', 'then'].some(k => value[k])) {
                         // 'value' 속성을 그대로 유지
                         newObj[i] = value[i];
+                    } else if (['given', 'when', 'then'].includes(i)) {
+                        newObj[i] = value[i].map(item => {
+                            const newItem = {...item};
+                            if (newItem.value) {
+                                newItem.value = {...newItem.value};
+                            }
+                            return newItem;
+                        });
                     } else {
                         const subValue = cycleAvoid(i, value[i]);
                         if (subValue !== undefined) {
