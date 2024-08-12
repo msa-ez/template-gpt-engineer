@@ -31,12 +31,11 @@ mvn [command] --no-transfer-progress
 <function>
 
 var cache = []
-const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
+const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "type"]
 const cycleAvoid = (key, value, path = '') => {
-    // examples 내부인 경우 모든 데이터를 유지
     if (path.includes('examples')) {
         if (typeof value === 'object' && value !== null) {
-            if (cache.includes(value)) return '[Circular]';
+            if (cache.includes(value)) return undefined;
             cache.push(value);
             
             if (Array.isArray(value)) {
@@ -54,7 +53,6 @@ const cycleAvoid = (key, value, path = '') => {
         return value;
     }
 
-    // includingKeys에 포함되지 않은 키는 제외
     if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
     if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
