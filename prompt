@@ -33,7 +33,11 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 const cycleAvoid = (key, value, path = '') => {
-        if (isNaN(key) && !includingKeys.includes(key) && !path.includes('examples')) return undefined;
+        if (path.includes('examples')) {
+            return value;  // 'examples' 내부의 모든 것을 유지
+        }
+
+        if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
         if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
             value = value.split(".").pop();
@@ -51,7 +55,7 @@ const cycleAvoid = (key, value, path = '') => {
                     if (Object.prototype.hasOwnProperty.call(value, i)) {
                         const newPath = `${path}.${key}`;
                         const subValue = cycleAvoid(i, value[i], newPath);
-                        if (subValue !== undefined || newPath.includes('examples')) {
+                        if (subValue !== undefined) {
                             newObj[i] = subValue;
                         }
                     }
