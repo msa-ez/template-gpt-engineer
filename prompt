@@ -33,39 +33,35 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 const cycleAvoid = (key, value, path = '') => {
-        if (path.includes('examples')) {
-            return value;  // 'examples' 내부의 모든 것을 유지
-        }
+    if (isNaN(key) && !includingKeys.includes(key) && !path.includes('examples')) return undefined;
 
-        if (isNaN(key) && !includingKeys.includes(key)) return undefined;
+    if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
+        value = value.split(".").pop();
+    }
 
-        if (key === "_type" && typeof value === 'string' && value.indexOf('.') > 1) {
-            value = value.split(".").pop();
-        }
+    if (typeof value === 'object' && value !== null) {
+        if (cache.includes(value)) return undefined;
+        cache.push(value);
 
-        if (typeof value === 'object' && value !== null) {
-            if (cache.includes(value)) return undefined;
-            cache.push(value);
-
-            if (Array.isArray(value)) {
-                return value.map((item, index) => cycleAvoid(index, item, `${path}.${key}`)).filter(item => item !== undefined);
-            } else {
-                const newObj = {};
-                for (let i in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, i)) {
-                        const newPath = `${path}.${key}`;
-                        const subValue = cycleAvoid(i, value[i], newPath);
-                        if (subValue !== undefined) {
-                            newObj[i] = subValue;
-                        }
+        if (Array.isArray(value)) {
+            return value.map((item, index) => cycleAvoid(index, item, `${path}.${key}`)).filter(item => item !== undefined);
+        } else {
+            const newObj = {};
+            for (let i in value) {
+                if (Object.prototype.hasOwnProperty.call(value, i)) {
+                    const newPath = `${path}.${key}`;
+                    const subValue = cycleAvoid(i, value[i], newPath);
+                    if (subValue !== undefined || path.includes('examples')) {
+                        newObj[i] = subValue;
                     }
                 }
-                return Object.keys(newObj).length > 0 ? newObj : undefined;
             }
+            return Object.keys(newObj).length > 0 ? newObj : undefined;
         }
-        return value;
-    };
-this.contexts.json = JSON.stringify(this, cycleAvoid)
+    }
+    return value;
+};
+this.contexts.json = JSON.stringify(this, (key, value) => cycleAvoid(key, value));
 
 
 </function>
