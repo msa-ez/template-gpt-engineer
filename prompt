@@ -33,7 +33,7 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 
-const cycleAvoid = (key, value) => {
+const cycleAvoid = (key, value, depth = 0) => {
     if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
     // shorten the type name
@@ -43,19 +43,19 @@ const cycleAvoid = (key, value) => {
 
     if (typeof value === 'object' && value !== null) {
         if (Array.isArray(value)) {
-            return value.map(item => cycleAvoid(key, item));
+            return value.map(item => cycleAvoid(key, item, depth + 1));
         } else {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
                     if (i === 'value' && (key === 'given' || key === 'when' || key === 'then')) {
-                        console.log(`Processing ${key}.value:`, value[i]);
-                        // 'value' 속성을 그대로 유지하되, 내부 객체도 처리
-                        newObj[i] = cycleAvoid(i, value[i]);
+                        console.log(`Processing ${key}.value at depth ${depth}:`, value[i]);
+                        // 'value' 속성을 그대로 유지
+                        newObj[i] = value[i];
                     } else if (['given', 'when', 'then'].includes(i)) {
-                        newObj[i] = value[i].map(item => cycleAvoid(i, item));
+                        newObj[i] = value[i].map(item => cycleAvoid(i, item, depth + 1));
                     } else {
-                        const subValue = cycleAvoid(i, value[i]);
+                        const subValue = cycleAvoid(i, value[i], depth + 1);
                         if (subValue !== undefined) {
                             newObj[i] = subValue;
                         }
