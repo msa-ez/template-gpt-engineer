@@ -53,8 +53,8 @@ const cycleAvoid = (key, value) => {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    // Preserve the entire value object for policy examples
-                    if (key === 'value' && ['given', 'when', 'then'].includes(i)) {
+                    // 'value' 속성을 그대로 유지
+                    if (i === 'value' && ['given', 'when', 'then'].some(item => value[item])) {
                         newObj[i] = value[i];
                     } else {
                         const subValue = cycleAvoid(i, value[i]);
