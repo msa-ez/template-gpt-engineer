@@ -33,8 +33,8 @@ mvn [command] --no-transfer-progress
 var cache = []
 const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 const cycleAvoid = (key, value, path = '') => {
-    // examples 내부인 경우 모든 데이터를 유지
-    if (path.includes('examples')) {
+    // examples 내부 또는 value 키인 경우 모든 데이터를 유지
+    if (path.includes('examples') || key === 'value') {
         if (typeof value === 'object' && value !== null) {
             if (cache.includes(value)) return '[Circular]';
             cache.push(value);
