@@ -47,16 +47,18 @@ const cycleAvoid = (key, value) => {
             const newObj = {};
             for (let i in value) {
                 if (Object.prototype.hasOwnProperty.call(value, i)) {
-                    if (i === 'value' && ['given', 'when', 'then'].includes(key)) {
-                        // 'value' 속성을 그대로 유지
-                        newObj[i] = value[i];
-                    } else if (['given', 'when', 'then'].includes(i)) {
-                        newObj[i] = value[i].map(item => {
-                            const newItem = {...item};
-                            if (newItem.value) {
-                                newItem.value = {...newItem.value};
+                    if (i === 'examples' && Array.isArray(value[i])) {
+                        newObj[i] = value[i].map(example => {
+                            const newExample = {};
+                            for (let j of ['given', 'when', 'then']) {
+                                if (example[j]) {
+                                    newExample[j] = example[j].map(item => ({
+                                        ...item,
+                                        value: item.value ? {...item.value} : {}
+                                    }));
+                                }
                             }
-                            return newItem;
+                            return newExample;
                         });
                     } else {
                         const subValue = cycleAvoid(i, value[i]);
