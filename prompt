@@ -31,7 +31,7 @@ mvn [command] --no-transfer-progress
 <function>
 
 var cache = []
-const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then"]
+const includingKeys = ["", "_type", "fieldDescriptors", "className", "displayName", "events", "aggregateRoot", "aggregates", "policies", "commands", "actors", "name", "examples", "given", "when", "then", "value", "type"]
 const cycleAvoid = (key, value) => {
         if (isNaN(key) && !includingKeys.includes(key)) return undefined;
 
